@@ -4,6 +4,7 @@ import requests
 import random
 import json
 
+
 app = Flask(__name__)
 
 # --- 設定 (Configuration) ---
