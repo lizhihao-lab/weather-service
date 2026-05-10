@@ -58,8 +58,8 @@ def get_weather_web():
         feels_like = res['main']['feels_like'] # 体感温度
         humidity = res['main']['humidity']     # 湿度
         wind = res['wind']['speed']            # 風速
-        desc = res['weather']['description'] # 天気の説明（晴れ、曇りなど）
-        icon = res['weather']['icon']        # 天気アイコンのID
+        desc = res['weather'][0]['description'] # 天気の説明（晴れ、曇りなど）
+        icon = res['weather'][0]['icon']        # 天気アイコンのID
 
         # --- HTMLテンプレート (Frontend) ---
         return f"""
