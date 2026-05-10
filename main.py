@@ -4,23 +4,19 @@ import requests
 import random
 import json
 
-
 app = Flask(__name__)
 
 # --- 設定 (Configuration) ---
-# 環境変数から暗号を取得。設定されていない場合は "fukuoka2026" を使用
-# ITパスポート試験でも重要：機密情報は環境変数で管理するのが鉄則！
 SECRET_PASSWORD = os.environ.get("MY_SITE_PASSWORD", "fukuoka2026")
 
 @app.route("/")
 def get_weather_web():
     # --- 認証チェック (Authentication) ---
-    # ブラウザのCookieから認証トークンを取得
     user_token = request.cookies.get('auth_token')
 
-    # トークンが一致しない場合はログイン画面を表示（403 Forbidden）
     if user_token != SECRET_PASSWORD:
-        return """
+        # 注意：这里的 CSS/JS 大括号都改成了双大括号 {{ }}
+        return f"""
         <body style="text-align:center;padding-top:100px;font-family:sans-serif;background:#f0f2f5;">
             <div style="display:inline-block;padding:40px;background:white;border-radius:15px;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
                 <h2 style="color:#333;">🔒 認証が必要です</h2>
@@ -29,39 +25,38 @@ def get_weather_web():
                 <button onclick="login()" style="padding:10px 20px;background:#007bff;color:white;border:none;border-radius:5px;cursor:pointer;font-weight:bold;">送信</button>
             </div>
             <script>
-                // 入力された値をCookieに保存してリロードする関数
-                function login(){
+                function login() {{
                     document.cookie = "auth_token=" + document.getElementById('pw').value + ";path=/";
                     location.reload();
-                }
+                }}
             </script>
         </body>
         """, 403
 
     # --- データの準備 (Data Preparation) ---
-    # OpenWeather APIのキーを環境変数から取得（GitHubには載せない秘密の情報）
     api_key = os.environ.get("WEATHER_API_KEY")
     city = "Fukuoka"
-    # APIのURLを作成（日本語で取得するために lang=ja を指定）
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=ja"
 
-    # 占い用のデータリスト
     fortunes = ["大吉 🌟", "中吉 ✨", "小吉 🌱", "吉 ☘️", "末吉 🍂"]
     lucky_items = ["ラーメン", "お守り", "青いペン", "スニーカー", "抹茶ラテ"]
 
     try:
-        # APIからお天気の情報を取得（タイムアウトを10秒に設定してフリーズ防止）
         res = requests.get(url, timeout=10).json()
 
-        # 必要な情報を辞書から取り出す
-        temp = res['main']['temp']           # 現在の気温
-        feels_like = res['main']['feels_like'] # 体感温度
-        humidity = res['main']['humidity']     # 湿度
-        wind = res['wind']['speed']            # 風速
-        desc = res['weather'][0]['description'] # 天気の説明（晴れ、曇りなど）
-        icon = res['weather'][0]['icon']        # 天気アイコンのID
+        # 万が一APIがエラーを返した場合のハンドリング
+        if res.get("cod") != 200:
+            return f"APIエラー: {res.get('message')}. WEATHER_API_KEYを確認してください。", 500
+
+        temp = res['main']['temp']
+        feels_like = res['main']['feels_like']
+        humidity = res['main']['humidity']
+        wind = res['wind']['speed']
+        desc = res['weather'][0]['description']
+        icon = res['weather'][0]['icon']
 
         # --- HTMLテンプレート (Frontend) ---
+        # 重要：HTML/CSS/JS内の { } はすべて {{ }} に置換しています
         return f"""
         <!DOCTYPE html>
         <html lang="ja">
@@ -70,7 +65,6 @@ def get_weather_web():
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Fukuoka Weather & Fortune</title>
             <style>
-                /* CSS: デザインを整える部分 */
                 body {{ font-family: 'Helvetica Neue', Arial, sans-serif; background: linear-gradient(135deg, #74ebd5 0%, #ACB6E5 100%); min-height: 100vh; margin: 0; display: flex; justify-content: center; align-items: center; }}
                 .container {{ background: rgba(255, 255, 255, 0.9); padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); width: 90%; max-width: 400px; text-align: center; }}
                 .temp {{ font-size: 52px; font-weight: bold; color: #ff4757; margin: 5px 0; }}
@@ -90,7 +84,7 @@ def get_weather_web():
                     <div class="details">
                         <div>体感: {feels_like}℃</div>
                         <div>湿度: {humidity}%</div>
-                        <div>風速: {wind}m/s</div>
+                        <div>风速: {wind}m/s</div>
                         <div>エリア: 九州</div>
                     </div>
                 </div>
@@ -105,26 +99,23 @@ def get_weather_web():
             </div>
 
             <script>
-                // JavaScript: 占いのアニメーションと結果表示
                 function spinWheel() {{
                     const wheel = document.getElementById('wheel');
                     const result = document.getElementById('result');
                     const item = document.getElementById('item');
-                    // PythonのリストをJSの配列として受け取る
+                    
                     const fortunes = {json.dumps(fortunes)};
                     const items = {json.dumps(lucky_items)};
                     
-                    // 1. 回転アニメーション（1800度以上回す）
                     wheel.style.transform = 'rotate(' + (1800 + Math.random() * 360) + 'deg)';
                     result.innerText = "鑑定中...";
                     item.innerText = "";
                     
-                    // 2. 2秒後に結果を表示
                     setTimeout(() => {{
                         const f = fortunes[Math.floor(Math.random() * fortunes.length)];
                         const i = items[Math.floor(Math.random() * items.length)];
                         
-                        // 絵文字だけを抽出してホイール内に表示
+                        // 絵文字の抽出ロジック（修正：バックスラッシュのエスケープ）
                         const emoji = f.match(/[\\uD800-\\uDBFF][\\uDC00-\\uDFFF]|\\S/g).pop();
                         wheel.innerText = emoji;
                         result.innerText = f;
@@ -136,10 +127,8 @@ def get_weather_web():
         </html>
         """
     except Exception as e:
-        # 万が一エラーが発生した場合の表示
-        return f"システムエラーが発生しました: {e}", 500
+        return f"系统错误: {e}", 500
 
 if __name__ == "__main__":
-    # Cloud Runが指定するポート番号でサーバーを起動
     port = int(os.environ.get("PORT", 8080))
     app.run(host="0.0.0.0", port=port)
