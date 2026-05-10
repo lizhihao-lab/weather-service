@@ -127,7 +127,14 @@ def get_weather_web():
         </html>
         """
     except Exception as e:
-        return f"系统错误: {e}", 500
+        # 直接把报错信息显示在网页上，这样就不需要找 textPayload 了
+        return f"""
+        <div style="color:red; padding:20px; border:2px solid red;">
+            <h1>代码运行报错了！</h1>
+            <p>具体原因: {e}</p>
+            <p>当前的 Commit SHA: 10260aa (确认版本用)</p>
+        </div>
+        """, 200 # 返回 200 以确保网页能显示出来
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
