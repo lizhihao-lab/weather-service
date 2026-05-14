@@ -39,7 +39,7 @@ def get_weather_web():
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric&lang=ja"
 
     fortunes = ["大吉 🌟", "中吉 ✨", "小吉 🌱", "吉 ☘️", "末吉 🍂"]
-    lucky_items = ["ラーメン", "お守り", "青いペン", "スニーカー", "抹茶ラテ"]
+    lucky_items = ["ラーメン1git", "お守り", "青いペン", "スニーカー", "抹茶ラテ"]
 
     try:
         res = requests.get(url, timeout=10).json()
